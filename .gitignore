@@ -1,0 +1,7 @@
+.venv
+.vscode
+data/us_dc_georgetown_with_details.json
+data/sample_n=1.json
+volumes/*
+app/__pycache__
+```
