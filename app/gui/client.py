@@ -11,16 +11,18 @@ from tkinter import (
     messagebox,
     StringVar,
     OptionMenu,
-) 
+)
 import asyncio
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 print(sys.path)
 from conversation.openai import OpenAIConversation
 from nlp.classifiers import zero_shot_classification, is_recommendation_request
 
 CONVERSATION_AGENT = OpenAIConversation()
+
 
 class GUI:
     client_socket = None
@@ -48,7 +50,15 @@ class GUI:
         Label(frame, text="Transcript:", font="Serif 12 bold", pady=10).pack(
             side="top", anchor="w"
         )
-        self.chat_transcript_area = Text(frame, width=70, height=50, font=("Serif", 12), bg="black", fg="white", wrap="word")
+        self.chat_transcript_area = Text(
+            frame,
+            width=70,
+            height=40,
+            font=("Serif", 12),
+            bg="black",
+            fg="white",
+            wrap="word",
+        )
         scrollbar = Scrollbar(
             frame, command=self.chat_transcript_area.yview, orient=VERTICAL
         )
@@ -91,7 +101,6 @@ class GUI:
         self.api_key = Entry(frame2, width=20, show="x", font=("Serif", 12))
         self.api_key.pack(side="left", padx=10)
 
-
         frame2.pack(side="top", pady=10)
         frame.pack(side="top")
 
@@ -100,7 +109,15 @@ class GUI:
         Label(frame, text="Enter message:", font=("Serif", 12)).pack(
             side="top", anchor="w"
         )
-        self.enter_text_widget = Text(frame, width=60, height=3, font=("Serif", 12), wrap="word", bg="black", fg="white")
+        self.enter_text_widget = Text(
+            frame,
+            width=60,
+            height=3,
+            font=("Serif", 12),
+            wrap="word",
+            bg="black",
+            fg="white",
+        )
         self.enter_text_widget.pack(side="left", pady=15)
         self.enter_text_widget.bind("<Return>", self.on_enter_key_pressed)
         frame.pack(side="top")
@@ -116,29 +133,29 @@ class GUI:
         senders_name = self.name_widget
         data = self.enter_text_widget.get(1.0, "end").strip()
         message = (senders_name + ": " + data).encode("utf-8")
-        self.chat_transcript_area.insert("end", message.decode('utf-8') + "\n\n")
-        self.chat_transcript_area.yview(END)    
+        self.chat_transcript_area.insert("end", message.decode("utf-8") + "\n\n")
+        self.chat_transcript_area.yview(END)
         self.enter_text_widget.delete(1.0, "end")
-        # refresh the gui
-        self.root.update_idletasks()
+        #  flush the gui
+        self.root.update()
 
         # detect whether the message is a request for local recommendations
         if is_recommendation_request(message.decode("utf-8")):
             # do vectordb search
             location = self.location_.get()
 
-    
         # send message and context to openai
         CONVERSATION_AGENT.set_api_key(self.api_key.get())
-        response = asyncio.run(CONVERSATION_AGENT.chatgpt_response(
-            message.decode("utf-8").lstrip(self.name_widget+ ': '), self.model_.get()
-        ))
+        response = asyncio.run(
+            CONVERSATION_AGENT.chatgpt_response(
+                message.decode("utf-8").lstrip(self.name_widget + ": "),
+                self.model_.get(),
+            )
+        )
 
         # write response in green text
         self.chat_transcript_area.insert("end", "AI: " + response + "\n\n")
         self.chat_transcript_area.yview(END)
-        
-        
 
         return "break"
 
