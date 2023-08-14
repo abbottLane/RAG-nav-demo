@@ -3,5 +3,9 @@
 data/us_dc_georgetown_with_details.json
 data/sample_n=1.json
 volumes/*
-app/__pycache__
+*__pycache__*
+models/llama-2-13b-dir
+models/llama-2-6b-dir
+docker-compose.yml
+key.txt
 ```
