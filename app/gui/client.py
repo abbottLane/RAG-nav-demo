@@ -19,9 +19,16 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 print(sys.path)
 from conversation.openai import OpenAIConversation
-from nlp.classifiers import zero_shot_classification, is_recommendation_request
+from nlp.classifiers import is_recommendation_request
+from nlp.vector_db import VectorDB
+from utils import parse_results
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 CONVERSATION_AGENT = OpenAIConversation()
+VECTOR_DB = VectorDB()
 
 
 class GUI:
@@ -68,11 +75,11 @@ class GUI:
         scrollbar.pack(side="left", fill="y")
 
         frame2 = Frame()
-        Label(frame2, text="Location:", padx=10, font=("Serif", 12)).pack(
+        Label(frame2, text="Location Index:", padx=10, font=("Serif", 12)).pack(
             side="left", anchor="w"
         )
         self.location_ = StringVar(frame2)
-        self.location_.set("Duvall")
+        self.location_.set("Georgetown, DC")
         locations = ["Duvall, WA", "Georgetown, DC"]
         self.location_dropdown = OptionMenu(
             frame2,
@@ -139,16 +146,26 @@ class GUI:
         #  flush the gui
         self.root.update()
 
+        # get location
+        location = self.location_.get()
+
         # detect whether the message is a request for local recommendations
+        extra_context = {}
         if is_recommendation_request(message.decode("utf-8")):
             # do vectordb search
-            location = self.location_.get()
+            logging.info("doing vectordb search")
+            VECTOR_DB.set_idx_by_location(location)
+            response = VECTOR_DB.search(collection=location, query=data)
+            parsed_context = parse_results(response)
+            logging.info(f"response: " + str(parsed_context))
+            extra_context = {"recommendations": parsed_context}
 
         # send message and context to openai
         CONVERSATION_AGENT.set_api_key(self.api_key.get())
+        prompt = f"{message.decode('utf-8').lstrip(self.name_widget)} \n\n Current location is {str(location)} \n\n {str(extra_context)}"
         response = asyncio.run(
             CONVERSATION_AGENT.chatgpt_response(
-                message.decode("utf-8").lstrip(self.name_widget + ": "),
+                prompt,
                 self.model_.get(),
             )
         )

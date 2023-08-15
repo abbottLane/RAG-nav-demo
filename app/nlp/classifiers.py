@@ -4,7 +4,11 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-zero_shot_classifier = pipeline("zero-shot-classification", model="MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli")
+zero_shot_classifier = pipeline(
+    "zero-shot-classification",
+    model="MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
+)
+
 
 def zero_shot_classification(text, labels, multi_label=False):
     """
@@ -15,13 +19,21 @@ def zero_shot_classification(text, labels, multi_label=False):
     :param labels: The labels to classify the text with
     :param multi_label: Whether the labels are multi-label or not
     """
-    logging.info("Zero-shot classification on text: " + str(text) + " with labels: " + str(labels))
+    logging.info(
+        "Zero-shot classification on text: "
+        + str(text)
+        + " with labels: "
+        + str(labels)
+    )
     start_time = time.time()
     output = zero_shot_classifier(text, labels, multi_label=multi_label)
     stop_time = time.time()
-    logging.info("Zero-shot classification took " + str(stop_time - start_time) + " seconds")
+    logging.info(
+        "Zero-shot classification took " + str(stop_time - start_time) + " seconds"
+    )
     logging.info("Zero-shot classification: " + str(output))
     return output
+
 
 def is_recommendation_request(text, confidence_threshold=0.9):
     """
@@ -33,7 +45,12 @@ def is_recommendation_request(text, confidence_threshold=0.9):
     """
     labels = ["location_recommendations_request", "no_location_recommendations_request"]
     output = zero_shot_classification(text, labels)
-    if output['labels'][0] == "recommendations_request" and output['scores'][0] > confidence_threshold:
+    if (
+        output["labels"][0] == "location_recommendations_request"
+        and output["scores"][0] > confidence_threshold
+    ):
+        logging.info("Recommendation request detected")
         return True
     else:
+        logging.info("No recommendation request detected")
         return False
