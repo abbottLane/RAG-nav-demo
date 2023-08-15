@@ -4,6 +4,7 @@
 These instructions are for Ubuntu. Mac may have a similar process. If you are on Windows I can't help you. 
 
 ### Prereqs
+0. I developed with Python11, but I have no reason to suspect any python3 should work
 1. You must have docker and docker-compose installed on your machine
 2. You must have virtualenv for python installed (`pip install virtualenv`)
 3. Get the `us_dc_georgetown_with_details.json` dataset from wlane, and put it in the `RAG-nav-demo/data` folder

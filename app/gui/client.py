@@ -170,7 +170,6 @@ class GUI:
             )
         )
 
-        # write response in green text
         self.chat_transcript_area.insert("end", "AI: " + response + "\n\n")
         self.chat_transcript_area.yview(END)
 

@@ -7,40 +7,41 @@ logging.basicConfig(level=logging.INFO)
 EMBEDDING_MODEL = sentence_transformers.SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def _load_dc_poi_format(filepath):
+def _load_dc_poi_format(filepath, duplication=1):
     data = []
     names = []
     categories = []
     descriptions = []
     with open(filepath, "r") as f:
         for line in f:
-            json_line = json.loads(line)
-            if "addr:full" not in json_line["properties"]:
-                json_line["properties"]["addr:full"] = ""
-            if "addr:street" not in json_line["properties"]:
-                json_line["properties"]["addr:street"] = ""
-            name = json_line["properties"]["name"]
-            category = " and ".join(
-                json_line["properties"]["mapbox:search:categories"].split(";")
-            )
-            description = ""
-            if "description" in json_line["properties"]:
-                description = json_line["properties"]["tripadvisor"]["description"]
-            descriptions.append(description)
-            names.append(name)
-            categories.append(category)
-            data.append(
-                {
-                    "mbx_id": str(json_line["properties"]["mapbox:id"]),
-                    "latitude": str(json_line["geometry"]["coordinates"][0]),
-                    "longitude": str(json_line["geometry"]["coordinates"][1]),
-                    "name": str(name),
-                    "addr_full": str(json_line["properties"]["addr:full"]),
-                    "addr_street": str(json_line["properties"]["addr:street"]),
-                    "category": str(category),
-                    "description": str(description),
-                }
-            )
+            for i in range(duplication):
+                json_line = json.loads(line)
+                if "addr:full" not in json_line["properties"]:
+                    json_line["properties"]["addr:full"] = ""
+                if "addr:street" not in json_line["properties"]:
+                    json_line["properties"]["addr:street"] = ""
+                name = json_line["properties"]["name"]
+                category = " and ".join(
+                    json_line["properties"]["mapbox:search:categories"].split(";")
+                )
+                description = ""
+                if "description" in json_line["properties"]:
+                    description = json_line["properties"]["tripadvisor"]["description"]
+                descriptions.append(description)
+                names.append(name)
+                categories.append(category)
+                data.append(
+                    {
+                        "mbx_id": str(json_line["properties"]["mapbox:id"]),
+                        "latitude": str(json_line["geometry"]["coordinates"][0]),
+                        "longitude": str(json_line["geometry"]["coordinates"][1]),
+                        "name": str(name),
+                        "addr_full": str(json_line["properties"]["addr:full"]),
+                        "addr_street": str(json_line["properties"]["addr:street"]),
+                        "category": str(category),
+                        "description": str(description),
+                    }
+                )
     contexts = []
     for name_text, category_text in zip(names, categories):
         encoding_context = f"The place name is {name_text} and it is of type {category_text} and is described as {description}"
@@ -89,7 +90,7 @@ def _load_simple_poi_format(filepath):
     return data
 
 
-def load_data(filepath):
+def load_data(filepath, duplication=1):
     """
     Loads data from a json file, cleans fields, and embeds text.
 
@@ -97,7 +98,7 @@ def load_data(filepath):
     The Duvall dataset was hand curated and has a simpler format.
     """
     if "us_dc_georgetown_with_details.json" in filepath:
-        return _load_dc_poi_format(filepath)
+        return _load_dc_poi_format(filepath, duplication=duplication)
     else:
         return _load_simple_poi_format(filepath)
 

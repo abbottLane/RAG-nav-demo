@@ -36,7 +36,7 @@ def index_collection(fields, name, filepath, description):
     logging.info(f"Creating collection {name}...")
     collection = Collection(name, schema, consistency_level="Strong")
 
-    logging.info(f"Loading dc_pois data from {filepath}...")
+    logging.info(f"Loading pois data from {filepath}...")
     entities = load_data(filepath=filepath)
 
     insert_result = collection.insert(pd.DataFrame(entities))
@@ -44,6 +44,31 @@ def index_collection(fields, name, filepath, description):
     collection.flush()
     logging.info(f"Number of entities in {name} index: {collection.num_entities}")
     return collection
+
+
+def benchmark_index_collection(fields, name, filepath, description, iterations=5):
+    schema = CollectionSchema(fields, description)
+
+    for i in range(iterations):
+        logging.info(f"BENCHMARKING INDEXING: Creating collection {name}...")
+        collection = Collection(name, schema, consistency_level="Strong")
+        logging.info(f"Loading pois data from {filepath}...")
+
+        start_embedding = time.time()
+        entities = load_data(filepath=filepath, duplication=i + 1)
+        end_embedding = time.time()
+        logging.info(f"Embedding time: {end_embedding - start_embedding}")
+
+        start_indexing_time = time.time()
+        insert_result = collection.insert(pd.DataFrame(entities))
+        end_indexing_time = time.time()
+        logging.info(f"Indexing time: {end_indexing_time - start_indexing_time}")
+
+        collection.flush()
+
+        # delete the collection so we can start fresh
+        logging.info(f"Deleting collection {name}...")
+        utility.drop_collection(name)
 
 
 VECTOR_DB_SCHEMA = [
@@ -63,6 +88,15 @@ VECTOR_DB_SCHEMA = [
     FieldSchema(name="description", dtype=DataType.VARCHAR, max_length=4000),
     FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=384),
 ]
+
+# benchmark_index_collection(
+#     VECTOR_DB_SCHEMA,
+#     "dc_pois",
+#     "data/us_dc_georgetown_with_details.json",
+#     description="Georgetown, Washington DC POIs",
+#     iterations=20,
+# )  # comment this out when you actually want to use the UI, otherwise you'll run bechmarking every time you start the app
+
 dc_pois = index_collection(
     VECTOR_DB_SCHEMA,
     "dc_pois",
