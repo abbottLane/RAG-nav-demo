@@ -1,1 +1,6 @@
 Store JSON data for locales in this folder. 
+
+the duvall dataset found here is just an example of a simple data format that can be ingested into the demo.
+
+A more complex data structure with 5184 POIs in the Georgetown DC area is not commited to the repo, as it is proprietary data. 
+I can supply the file on request, if you work with me. It would live in this directory.
